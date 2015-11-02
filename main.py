@@ -7,6 +7,7 @@ pornographic videos through the website xvideos.com.
 import webbrowser
 import queue
 import sys
+import os
 
 from gui     import Window
 from db_api  import Database
@@ -16,8 +17,8 @@ from brain   import Brain
 
 class Mediator:
     """Handles communication between objects."""
-    def __init__(self, look_ahead=4, skip_to_page=1, feats=500, max_q_sz=100,
-                 base_url="http://www.xvideos.com/new/{0}/"):
+    def __init__(self, look_ahead=4, skip_to_page=0, feats=10, max_q_sz=100,
+                 base_url="http://www.xvideos.com/c/{0}/anal-12"):
         self.look_ahead = look_ahead
         self.features_to_train_on = feats
         self.q = queue.PriorityQueue(maxsize=max_q_sz)
@@ -31,7 +32,8 @@ class Mediator:
         self.ai  = Brain(self)
         self.win = Window(self)
 
-        self.train()
+        if "brain.pkl" in os.listdir():
+            self.train()
         self.get_next()
 
     def get_next(self):
@@ -48,26 +50,26 @@ class Mediator:
                 print("!", end="")
                 sys.stdout.flush()
                 scraped = self.scr.scrape_video()
-                # We want to be able to get the scraped data
-                # and preview pics by video url.
-                self.viewed_videos[self.scr.cur_vid] = (scraped, self.scr.cur_pic)
+                # We want to be able to get the scraped data and preview
+                # pics by video url (guessed rating is just for fun).
                 guessed_rating = self.ai.predict(scraped)
+                self.viewed_videos[self.scr.cur_vid] = (scraped, self.scr.cur_pic, guessed_rating)
                 # priority queue takes out low numbers first.
-                guess_rating = self.max_rating - guessed_rating
-                self.q.put(self.scr.cur_vid, guessed_rating)
+                self.q.put(self.scr.cur_vid, self.max_rating - guessed_rating)
                 vids_added += 1
             # Get the video likely to have the best rating
             to_show_url = self.q.get()
-            scraped_data, preview_pic_url = self.viewed_videos[to_show_url]
+            scraped_data, preview_pic_url, guessed_rating = self.viewed_videos[to_show_url]
             self.currently_loaded_video_data = scraped_data
             pic1, pic2, pic3 = self.scr.load_pics(preview_pic_url) 
             self.win.update_images(pic1, pic2, pic3)
+        url = self.currently_loaded_video_data["url"]
         print()
         print("\ttitle:\t", self.currently_loaded_video_data["title"])
         print("\tlength:\t", self.currently_loaded_video_data["duration"])
+        print("\tguessed rating:\t", guessed_rating)
         print("\ttags:\t", "  ".join(self.currently_loaded_video_data["tags"]))
         print()
-        self.train()
 
     def save(self, rating):
         """Save the data scraped from the current video then get next video."""
