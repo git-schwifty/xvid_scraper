@@ -45,7 +45,7 @@ class Window:
         self.next_btn = tk.Button(self.btm_frm, text="Skip",   anchor=tk.S, command=self.med.get_next)
         self.exit_btn = tk.Button(self.btm_frm, text="Exit",   anchor=tk.S, command=self.close)
         self.open_btn = tk.Button(self.btm_frm, text="Open",   anchor=tk.S, command=self.med.open_vid)
-        self.lern_btn = tk.Button(self.btm_frm, text="Train",  anchor=tk.S, command=self.med.train)
+        self.lern_btn = tk.Button(self.btm_frm, text="Start",  anchor=tk.S, command=self.med.start_gathering)
         for btn in [self.hate_btn, self.neut_btn,
                     self.love_btn, self.fave_btn,
                     self.exit_btn, self.open_btn,

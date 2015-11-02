@@ -7,7 +7,7 @@ from copy import copy
 class Database:
     """SQLite backend for storing, retrieving, and viewing video information."""
     def __init__(self):
-        self.cnx = sql.connect('xvid.db')
+        self.cnx = sql.connect('xvid.db', check_same_thread=False)  # must enable multithreading
         self.c   = self.cnx.cursor()
         self.c.execute("""CREATE TABLE IF NOT EXISTS
                           videos(url      STR   PRIMARY KEY,
