@@ -1,5 +1,6 @@
 import sqlite3 as sql
 import re
+import numpy as np
 from copy import copy
 
 
@@ -58,42 +59,67 @@ class Database:
                        """.format(url))
         return any(self.c.fetchall())
 
-    def vectorize_tags(self):
+    def vectorize_tags(self, take_top=100):
         """ Create a binary vector for each video representing
           the presence or absense of tags. """
         # TODO: make this less ugly
-        if not self.tags:
-            # First, grab the top 100 common tags from our database.
-            self.c.execute("""
-              SELECT tag, COUNT(tag) AS cnt FROM tags
-              GROUP by tag
-              ORDER BY cnt DESC
-              LIMIT 100;
-            """)
-            self.tags = [tag[0] for tag in self.c.fetchall()]
 
-        # Get the corresponding tags to all the titles.
-        all_vectors = []
-        usr_ratings = []
+        # First, grab the top 100 common tags from our database.
+        self.c.execute("""
+          SELECT tag, COUNT(tag) AS cnt FROM tags
+          GROUP by tag
+          ORDER BY cnt DESC
+          LIMIT {0};
+        """.format(take_top))
+        top_tags = [tag[0] for tag in self.c.fetchall()]
+        top_tags += ["duration", "raters", "rating", "views"]  # other info we want
+
+        # We need to create a mapping of each tag to a position in our vector.
+        tag_to_vec = {tag:i for tag, i in zip(top_tags, range(len(top_tags)))}
+
+        # We use urls as the unique identifier for each video. Grab them.
         self.c.execute("""
           SELECT DISTINCT url FROM videos;
         """)
         urls = self.c.fetchall()
         urls = [u[0] for u in urls]
+
+        # Now for each video, get a vector of tags and the user's opinion.
+        all_vectors = []
+        usr_ratings = []
         for url in urls:
+            # Get all tags associated with this video.
             self.c.execute("""
               SELECT tag FROM tags
               WHERE url = '{0}';
             """.format(url))
-            cur_tags = [t[0] for t in self.c.fetchall()]
-            all_vectors.append([master_tag in cur_tags for master_tag in self.tags])
-            # Now we have to get what the user thinks of that particular movie.
-            self.c.execute("""
-              SELECT loved FROM videos WHERE url = '{0}';
-            """.format(url))
-            usr_ratings.append(self.c.fetchall()[0][0])
+            this_vids_tags = [t[0] for t in self.c.fetchall()]
 
-        return list(zip(all_vectors, usr_ratings))
+            # Now turn those tags into a vector of numbers.
+            # Start by making an empty vector to fit all our tags plus
+            # the duration, number of raters, average rating, and number
+            # of views.
+            tag_vector = np.zeros(take_top + 4)
+            for tag in this_vids_tags:
+                if tag in tag_to_vec.keys():
+                    position = tag_to_vec[tag]
+                    tag_vector[position] = 1
+            all_vectors.append(tag_vector)
+
+            # Now we get non-tag data for our vector.
+            self.c.execute("""
+              SELECT loved, duration, raters, rating, views
+              FROM videos WHERE url = '{0}';
+            """.format(url))
+            non_tag = self.c.fetchall()
+            for loved, duration, raters, rating, views in non_tag:
+                usr_ratings.append(loved)
+                tag_vector[tag_to_vec["duration"]] = duration
+                tag_vector[tag_to_vec["raters"]]   = raters
+                tag_vector[tag_to_vec["rating"]]   = rating
+                tag_vector[tag_to_vec["views"]]    = views
+
+        return all_vectors, usr_ratings, tag_to_vec
 
     def __del__(self):
         self.cnx.close()

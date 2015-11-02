@@ -33,7 +33,7 @@ class Window:
 
         self.top_frm.pack()
 
-        # Create four buttons at the bottom of the screen.
+        # Create a bunch of buttons at the bottom of the screen.
         hate = lambda: self.med.save(0)
         neut = lambda: self.med.save(1)
         love = lambda: self.med.save(2)
@@ -45,10 +45,11 @@ class Window:
         self.next_btn = tk.Button(self.btm_frm, text="Skip",   anchor=tk.S, command=self.med.get_next)
         self.exit_btn = tk.Button(self.btm_frm, text="Exit",   anchor=tk.S, command=self.close)
         self.open_btn = tk.Button(self.btm_frm, text="Open",   anchor=tk.S, command=self.med.open_vid)
+        self.lern_btn = tk.Button(self.btm_frm, text="Train",  anchor=tk.S, command=self.med.train)
         for btn in [self.hate_btn, self.neut_btn,
                     self.love_btn, self.fave_btn,
                     self.exit_btn, self.open_btn,
-                    self.next_btn]:
+                    self.next_btn, self.lern_btn]:
             btn.pack(side=tk.LEFT)
 
         self.btm_frm.pack()
