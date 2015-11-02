@@ -10,6 +10,7 @@ class Brain:
         self.med = mediator
         self.min_rating = min_rating
         wdfs = os.listdir()
+
         if "brain.pkl" in wdfs and "brain_vec.pkl" in wdfs:
             with open("brain.pkl", "rb") as f:
                 self.tree = pickle.load(f)
@@ -56,11 +57,7 @@ class Brain:
             this_vec[self.tag_to_vec["views"]]    = data["views"]
 
             # now predict what the user will rate this as.
-            guess = self.tree.predict(this_vec)
-            if guess > self.min_rating:
-                return True
-            else:
-                return False
+            return self.tree.predict(this_vec)
 
         else:
             return True

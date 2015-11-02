@@ -102,7 +102,9 @@ class Scraper:
         url1 = pic_url.format(10)
         url2 = pic_url.format(20)
         url3 = pic_url.format(30)
-        while True:
+        count = 0
+        while count < 2:
+            count += 1
             try:
                 r1 = requests.get(url1)
                 r2 = requests.get(url2)
@@ -117,9 +119,9 @@ class Scraper:
                 return pic1, pic2, pic3
 
             except requests.exceptions.ConnectionError:
-                print("Connection error, waiting...")
-                time.sleep(3)
-                print("Trying again.")
-
-    def __del__(self):
-        self.session.close()
+                if count < 2:
+                    print("Connection error, waiting...")
+                    time.sleep(3)
+                    print("Trying again.")
+                else:
+                    print("Connection error. Pics not loaded.")

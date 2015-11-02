@@ -16,17 +16,21 @@ from brain   import Brain
 
 class Mediator:
     """Handles communication between objects."""
-    def __init__(self, look_ahead=2, skip_to_page=1):
-        self.viewed_videos = {}
-        self.currently_loaded_video_data = {}
-        self.q    = queue.PriorityQueue()
+    def __init__(self, look_ahead=4, skip_to_page=1, feats=500, max_q_sz=100,
+                 base_url="http://www.xvideos.com/new/{0}/"):
         self.look_ahead = look_ahead
+        self.features_to_train_on = feats
+        self.q = queue.PriorityQueue(maxsize=max_q_sz)
 
-        self.scr = Scraper(base_url="http://www.xvideos.com/new/{0}/", pg_n=skip_to_page)
+        self.currently_loaded_video_data = {}
+        self.viewed_videos = {}
+
+        self.scr = Scraper(base_url=base_url, pg_n=skip_to_page)
         self.db  = Database()
         self.ai  = Brain(self)
         self.win = Window(self)
 
+        self.train()
         self.get_next()
 
     def get_next(self):
@@ -55,6 +59,12 @@ class Mediator:
             self.currently_loaded_video_data = scraped_data
             pic1, pic2, pic3 = self.scr.load_pics(preview_pic_url) 
             self.win.update_images(pic1, pic2, pic3)
+        print("\ttitle:\t", self.currently_loaded_video_data["title"])
+        print("\trating?:\t", guessed_rating)
+        print("\tlength:\t", self.currently_loaded_video_data["duration"])
+        print("\ttags:\t", "\t".join(self.currently_loaded_video_data["tags"]))
+        print()
+        self.train()
 
     def save(self, rating):
         """Save the data scraped from the current video then get next video."""
@@ -66,11 +76,10 @@ class Mediator:
         webbrowser.open(self.scr.cur_vid)
 
     def train(self):
-        print("getting top tags")
-        tags, ratings, tag_to_vec = self.db.vectorize_tags()
-        print("training on tags.")
+        print("training")
+        print()
+        tags, ratings, tag_to_vec = self.db.vectorize_tags(self.features_to_train_on)
         self.ai.train(tags, ratings, tag_to_vec)
-        print("finished training")
 
     def close_db(self):
         """When a window closes, disconnect from a database."""
