@@ -21,6 +21,7 @@ class Mediator:
         self.look_ahead = look_ahead
         self.features_to_train_on = feats
         self.q = queue.PriorityQueue(maxsize=max_q_sz)
+        self.max_rating = 5
 
         self.currently_loaded_video_data = {}
         self.viewed_videos = {}
@@ -40,17 +41,19 @@ class Mediator:
         while vids_added < self.look_ahead:
             self.scr.next()
             if self.db.has_video(self.scr.cur_vid):
-                print("vid already rated", end="\t")
+                print(".", end="")
                 sys.stdout.flush()
                 continue
             else:
-                print("\nscraping vid")
+                print("!", end="")
                 sys.stdout.flush()
                 scraped = self.scr.scrape_video()
                 # We want to be able to get the scraped data
                 # and preview pics by video url.
                 self.viewed_videos[self.scr.cur_vid] = (scraped, self.scr.cur_pic)
                 guessed_rating = self.ai.predict(scraped)
+                # priority queue takes out low numbers first.
+                guess_rating = self.max_rating - guessed_rating
                 self.q.put(self.scr.cur_vid, guessed_rating)
                 vids_added += 1
             # Get the video likely to have the best rating
@@ -59,10 +62,10 @@ class Mediator:
             self.currently_loaded_video_data = scraped_data
             pic1, pic2, pic3 = self.scr.load_pics(preview_pic_url) 
             self.win.update_images(pic1, pic2, pic3)
+        print()
         print("\ttitle:\t", self.currently_loaded_video_data["title"])
-        print("\trating?:\t", guessed_rating)
         print("\tlength:\t", self.currently_loaded_video_data["duration"])
-        print("\ttags:\t", "\t".join(self.currently_loaded_video_data["tags"]))
+        print("\ttags:\t", "  ".join(self.currently_loaded_video_data["tags"]))
         print()
         self.train()
 
@@ -76,8 +79,6 @@ class Mediator:
         webbrowser.open(self.scr.cur_vid)
 
     def train(self):
-        print("training")
-        print()
         tags, ratings, tag_to_vec = self.db.vectorize_tags(self.features_to_train_on)
         self.ai.train(tags, ratings, tag_to_vec)
 
