@@ -1,6 +1,7 @@
 import re
 import time
 import requests
+from copy import copy
 from io   import BytesIO
 from lxml import html
 
@@ -18,7 +19,9 @@ class Scraper:
 
     def scrape_index(self):
         url = self.base_url.format(self.pg_n)
-        pg = html.fromstring(requests.get(url).text)
+        r = requests.get(url)
+        r.close()
+        pg = html.fromstring(r.text)
         # videos links are relative paths
         self.vids += ["http://www.xvideos.com" + ending
                       for ending in pg.xpath("//div[@class='thumb']/a/@href")]
@@ -29,7 +32,9 @@ class Scraper:
 
     def scrape_video(self):
         data = {}
-        pg = html.fromstring(requests.get(self.cur_vid).text)
+        r = requests.get(self.cur_vid)
+        r.close()
+        pg = html.fromstring(r.text)
         
         # Title.
         title = pg.xpath("//div[@id='main']/h2//text()")
@@ -90,21 +95,31 @@ class Scraper:
         self.cur_vid = self.vids.pop()
         self.cur_pic = self.pics.pop()
 
-    def load_pics(self):
+    def load_pics(self, pic_url):
         """Determine the next video to be show and return three preview images."""
+        pic_url = re.search(".+\.(?=([0-9]+.jpg))", pic_url).group()
+        pic_url = pic_url + "{0}.jpg"  # make url able to take .format() method
+        url1 = pic_url.format(10)
+        url2 = pic_url.format(20)
+        url3 = pic_url.format(30)
         while True:
             try:
-                pic_url = self.cur_pic
-                pic_url = re.search(".+\.(?=([0-9]+.jpg))", pic_url).group()
-                pic_url = pic_url + "{0}.jpg"  # make url able to take .format() method
-                url1 = pic_url.format(10)
-                url2 = pic_url.format(20)
-                url3 = pic_url.format(30)
-                pic1 = PhotoImage(Image.open(BytesIO(requests.get(url1).content)))
-                pic2 = PhotoImage(Image.open(BytesIO(requests.get(url2).content)))
-                pic3 = PhotoImage(Image.open(BytesIO(requests.get(url3).content)))
+                r1 = requests.get(url1)
+                r2 = requests.get(url2)
+                r3 = requests.get(url3)
+
+                r1.close(); r2.close(); r3.close();
+
+                pic1 = PhotoImage(Image.open(BytesIO(r1.content)))
+                pic2 = PhotoImage(Image.open(BytesIO(r2.content)))
+                pic3 = PhotoImage(Image.open(BytesIO(r3.content)))
+
                 return pic1, pic2, pic3
+
             except requests.exceptions.ConnectionError:
                 print("Connection error, waiting...")
                 time.sleep(3)
                 print("Trying again.")
+
+    def __del__(self):
+        self.session.close()
