@@ -83,7 +83,8 @@ class Brain:
             tree_pred = self.tree.predict(this_vec)
             svm_pred  = self.svm.predict(this_vec)
             
-            return (tree_pred + svm_pred) / 2
+            # average and also make sure we're dealing with floats, not np.arrays
+            return float(tree_pred + svm_pred) / 2
 
         else:
             return True

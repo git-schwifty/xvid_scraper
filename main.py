@@ -26,8 +26,8 @@ class Mediator:
 
         # Settings will go here.
         index_url  = "http://www.xvideos.com/c/{0}/anal-12"
-        look_ahead = 120
-        qmaxsize   = 50
+        look_ahead = 40
+        qmaxsize   = 20
 
         # State used by various objects.
         self.cur_vid_data = {}
@@ -46,34 +46,37 @@ class Mediator:
 
     def gather(self, look_ahead=4):
         """Background process that quietly fills up the video queue with urls."""
-        while self.q.not_full():
-            for i in range(look_ahead):
-                # Tell the scraper to set up the next
-                # video for further processing.
-                self.scr.next()
-                cur_vid = self.scr.cur_vid
+        while True:
+            if self.q.not_full():
+                for i in range(look_ahead):
+                    # Tell the scraper to set up the next
+                    # video for further processing.
+                    self.scr.next()
+                    cur_vid = self.scr.cur_vid
 
-                # Make sure it's not already in the database.
-                if self.db.has_video(cur_vid):
-                    continue
-                
-                # Scrape the video page for data.
-                scraped_data = self.scr.scrape_video(cur_vid)
+                    # Make sure it's not already in the database.
+                    if self.db.has_video(cur_vid):
+                        continue
+                    
+                    # Scrape the video page for data.
+                    scraped_data = self.scr.scrape_video(cur_vid)
 
-                # Predict how much the user will like this video.
-                prediction = self.ai.predict(scraped_data)
+                    # Predict how much the user will like this video.
+                    prediction = self.ai.predict(scraped_data)
 
-                # Save some extra data.
-                scraped_data["pic_url"] = self.scr.cur_pic
-                scraped_data["pred"]    = prediction
-                
-                # Put data into queue.
-                # Note that we put a negative sign in front of the predicton
-                # because a high rating corresponds to a large number, but for
-                # queues, a low number is considered a high priority.
-                self.lock.acquire()
-                self.q.put(scraped_data, -prediction)
-                self.lock.release()
+                    # Save some extra data.
+                    scraped_data["pic_url"] = self.scr.cur_pic
+                    scraped_data["pred"]    = prediction
+                    
+                    # Put data into queue.
+                    # Note that we put a negative sign in front of the predicton
+                    # because a high rating corresponds to a large number, but for
+                    # queues, a low number is considered a high priority.
+                    self.lock.acquire()
+                    self.q.put(scraped_data, -prediction)
+                    self.lock.release()
+            else:
+                time.sleep(1)
 
     def next_(self):
         """Load up the next video in the queue."""
