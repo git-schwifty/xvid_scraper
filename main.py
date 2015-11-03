@@ -4,106 +4,116 @@ pornographic videos through the website xvideos.com.
 """
 #!/usr/bin/env python
 
-import webbrowser
-import sys
-import os
-
-from gui     import Window
-from db_api  import Database
-from scraper import Scraper
-from brain   import Brain
-from queue   import PriorityQueue
-
+from db_api    import Database
+from scraper   import Scraper
+from brain     import Brain
+#from profile   import ProfileManager
+from proj_ADTs import MyQueue
 from threading import Thread, RLock
 
+import webbrowser
+import time
+import pdb
+import sys
+
+
+# WARNING: as of right now, threading doesn't seem to play nice with
+# tkinter, so any fancy threading stuff I did here is really just a
+# placeholder for later when I ditch tkinter entirely.
 class Mediator:
-    """Handles communication between objects."""
-    def __init__(self, look_ahead=4, skip_to_page=0, feats=10, max_q_sz=100,
-                 base_url="http://www.xvideos.com/c/{0}/anal-12"):
-        # Let's set this up so gathering new videos can happen in the background.
-        self.scraped_videos = {}
-        gather_args = (look_ahead, skip_to_page, feats, max_q_sz)
-        self.gather_process = Thread(target = self.gather,
-                                     args   = gather_args,
-                                     daemon = True)
+    def __init__(self, win):
+        self.win  = win
 
-        self.scr = Scraper(base_url=base_url, pg_n=skip_to_page)
-        self.db  = Database()
-        self.ai  = Brain(self)
-        self.win = Window(self)
+        # Settings will go here.
+        index_url  = "http://www.xvideos.com/c/{0}/anal-12"
+        look_ahead = 4
+        qmaxsize   = 25
 
-        self.currently_loaded_video_data = {}
-        self.feats = feats
+        # State used by various objects.
+        self.cur_vid_data = {}
 
-        self.q = PriorityQueue(maxsize=max_q_sz)
+        # Load up all the major elements of the program.
+        self.scr  = Scraper(index_url=index_url, pg_n=0)
+        self.db   = Database()
+        self.ai   = Brain(self)
+        self.q    = MyQueue(maxsize=qmaxsize)
         self.lock = RLock()
 
-        if "brain.pkl" in os.listdir():
-            self.train()
-        self.get_next()
-
-    def start_gathering(self):
+        # Scraping websites will be done as a background process.
+        self.gather_process = Thread(target = self.gather,
+                                     daemon = True)
         self.gather_process.start()
 
-    def get_next(self):
-        """Determine which video should be selected, then update window."""
-        # Get the video likely to have the best rating
-        if self.q.qsize():
-            self.lock.acquire()
-            to_show_url = self.q.get()
-            self.lock.release()
-            scraped_data, preview_pic_url, guessed_rating = self.scraped_videos[to_show_url]
-            self.currently_loaded_video_data = scraped_data
-            pic1, pic2, pic3 = self.scr.load_pics(preview_pic_url) 
-            self.win.update_images(pic1, pic2, pic3)
-            url = scraped_data["url"]
-            print("\n")
-            print("\ttitle:\t", scraped_data["title"])
-            print("\tlength:\t", scraped_data["duration"])
-            print("\tguessed rating:\t", guessed_rating)
-            print("\ttags:\t", "  ".join(scraped_data["tags"]))
-            print()
-        else:
-            print("Error: still gathering videos.")
+    def gather(self, look_ahead=4):
+        """Background process that quietly fills up the video queue with urls."""
+        while self.q.not_full():
+            for i in range(look_ahead):
+                # Tell the scraper to set up the next
+                # video for further processing.
+                self.scr.next()
+                cur_vid = self.scr.cur_vid
 
-    def gather(self, look_ahead, skip_to_page, feats, max_q_sz):
-        """ Add videos to the priority queue independently
-          of rating and loading videos. """
-        while True:
-            if self.q.qsize() < max_q_sz:
-                for i in range(look_ahead):
-                    self.scr.next()
-                    if self.db.has_video(self.scr.cur_vid):
-                        # make sure we only work on unrated videos
-                        print(".", end="")
-                        continue
-                    scraped_data = self.scr.scrape_video()
-                    pred_rating  = self.ai.predict(scraped_data)
-                    self.scraped_videos[self.scr.cur_vid] = (scraped_data,
-                                                            self.scr.cur_pic,
-                                                            pred_rating)
-                    self.lock.acquire()
-                    self.q.put(self.scr.cur_vid, -pred_rating)
-                    self.lock.release()
-                    print(":", end="")
+                # Make sure it's not already in the database.
+                if self.db.has_video(cur_vid):
+                    continue
+                
+                # Scrape the video page for data.
+                scraped_data = self.scr.scrape_video(cur_vid)
+
+                # Predict how much the user will like this video.
+                prediction = self.ai.predict(scraped_data)
+
+                # Save some extra data.
+                scraped_data["pic_url"] = self.scr.cur_pic
+                scraped_data["pred"]    = prediction
+                
+                # Put data into queue.
+                # Note that we put a negative sign in front of the predicton
+                # because a high rating corresponds to a large number, but for
+                # queues, a low number is considered a high priority.
+                self.lock.acquire()
+                self.q.put(scraped_data, -prediction)
+                self.lock.release()
+
+    def next_(self):
+        """Load up the next video in the queue."""
+        # Wait until we have save data before going on to the next one.
+        while self.q.empty():
+            time.sleep(1)
+
+        # Get our data out of the queue.
+        self.lock.acquire()
+        self.cur_vid_data = self.q.get()
+        self.lock.release()
+
+        # Refresh the window with new preview images.
+        pic_url = self.cur_vid_data["pic_url"]
+        self.win.update_images( *self.scr.load_pics(pic_url) )
+
+        # Display a little data about the video.
+        for data_point in ['title', 'duration', 'pred']:
+            print(self.cur_vid_data[data_point])
+
 
     def save(self, rating):
-        """Save the data scraped from the current video then get next video."""
-        self.currently_loaded_video_data["loved"] = rating
-        sys.stdout.flush()
-        self.db.save(self.currently_loaded_video_data)
-        self.get_next()
-        
+        # I should change the name loved since the program evolved to
+        # where there is no longer a binary yes/no for the rating.
+        self.cur_vid_data["loved"] = rating
+        self.db.save(self.cur_vid_data)
+        self.next_()
+
     def open_vid(self):
-        webbrowser.open(self.scr.cur_vid)
+        webbrowser.open(self.cur_vid_data["url"])
 
     def train(self):
-        tags, ratings, tag_to_vec = self.db.vectorize_tags(self.feats)
-        self.ai.train(tags, ratings, tag_to_vec)
+        self.ai.train( self.db.vectorize_tags() )
 
     def close_db(self):
         """When a window closes, disconnect from a database."""
         self.db.cnx.close()
 
 if __name__ == "__main__":
-    med = Mediator()
+    # Mediator gets called from inside window because
+    # window has to be the main thread in order for it
+    # to not throw up a ton of errors.
+    win = Window()

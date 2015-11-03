@@ -1,7 +1,7 @@
 import tkinter as tk
 from PIL import Image
 from PIL.ImageTk import PhotoImage
-from main2 import Mediator
+from main import Mediator
 
 
 class Window:
@@ -57,6 +57,7 @@ class Window:
             btn.pack(side=tk.LEFT)
 
         self.btm_frm.pack()
+        self.med.next_()
 
 
     def update_images(self, pic1, pic2, pic3):
