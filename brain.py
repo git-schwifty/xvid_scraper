@@ -82,7 +82,6 @@ class Brain:
             # now predict what the user will rate this as.
             tree_pred = self.tree.predict(this_vec)
             svm_pred  = self.svm.predict(this_vec)
-            sys.stdout.flush()
             
             return (tree_pred + svm_pred) / 2
 

@@ -26,8 +26,8 @@ class Mediator:
 
         # Settings will go here.
         index_url  = "http://www.xvideos.com/c/{0}/anal-12"
-        look_ahead = 4
-        qmaxsize   = 25
+        look_ahead = 120
+        qmaxsize   = 50
 
         # State used by various objects.
         self.cur_vid_data = {}
