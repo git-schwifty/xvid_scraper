@@ -1,6 +1,7 @@
 import tkinter as tk
 from PIL import Image
 from PIL.ImageTk import PhotoImage
+from main2 import Mediator
 
 
 class Window:
@@ -9,9 +10,13 @@ class Window:
     # do most things three times in a short, readable and
     # elegant way.
 
-    def __init__(self, mediator):
-        self.med = mediator
+    def __init__(self):
         self.root = tk.Tk()
+
+        # In order for tkinter to be threadsafe, it needs to be the main thread.
+        # Therefor, we actually have to create the mediator object from within
+        # the GUI rather than create the GUI from inside the mediator!
+        self.med = Mediator(self)
 
         # The top half of the window has pictures, the bottom buttons.
         self.top_frm = tk.Frame()
@@ -42,17 +47,17 @@ class Window:
         self.neut_btn = tk.Button(self.btm_frm, text="Meh.",   anchor=tk.S, command=neut)
         self.love_btn = tk.Button(self.btm_frm, text="Love",   anchor=tk.S, command=love)
         self.fave_btn = tk.Button(self.btm_frm, text="WOWZA!", anchor=tk.S, command=fave)
-        self.next_btn = tk.Button(self.btm_frm, text="Skip",   anchor=tk.S, command=self.med.get_next)
+        self.next_btn = tk.Button(self.btm_frm, text="Skip",   anchor=tk.S, command=self.med.next_)
         self.exit_btn = tk.Button(self.btm_frm, text="Exit",   anchor=tk.S, command=self.close)
         self.open_btn = tk.Button(self.btm_frm, text="Open",   anchor=tk.S, command=self.med.open_vid)
-        self.lern_btn = tk.Button(self.btm_frm, text="Start",  anchor=tk.S, command=self.med.start_gathering)
         for btn in [self.hate_btn, self.neut_btn,
                     self.love_btn, self.fave_btn,
                     self.exit_btn, self.open_btn,
-                    self.next_btn, self.lern_btn]:
+                    self.next_btn]:
             btn.pack(side=tk.LEFT)
 
         self.btm_frm.pack()
+
 
     def update_images(self, pic1, pic2, pic3):
         self.pic1_lbl.configure(image=pic1)

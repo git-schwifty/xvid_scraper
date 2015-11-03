@@ -11,14 +11,14 @@ from PIL.ImageTk import PhotoImage
 
 class Scraper:
     """Scrape data and links from xvideos.com."""
-    def __init__(self, base_url="http://www.xvideos.com/c/{0}/Anal-12", pg_n=0):
-        self.base_url = base_url
+    def __init__(self, index_url="http://www.xvideos.com/c/{0}/Anal-12", pg_n=0):
+        self.index_url = index_url
         self.pg_n = pg_n
         self.vids = []
         self.pics = []
 
     def scrape_index(self):
-        url = self.base_url.format(self.pg_n)
+        url = self.index_url.format(self.pg_n)
         r = requests.get(url)
         r.close()
         pg = html.fromstring(r.text)
@@ -30,9 +30,9 @@ class Scraper:
         assert len(self.vids) == len(self.pics)
         self.pg_n += 1
 
-    def scrape_video(self):
+    def scrape_video(self, vid_url):
         data = {}
-        r = requests.get(self.cur_vid)
+        r = requests.get(vid_url)
         r.close()
         pg = html.fromstring(r.text)
         

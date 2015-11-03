@@ -59,7 +59,7 @@ class Database:
                        """.format(url))
         return any(self.c.fetchall())
 
-    def vectorize_tags(self, take_top=100):
+    def vectorize_tags(self, take_top=25):
         """ Create a binary vector for each video representing
           the presence or absense of tags. """
         # TODO: make this less ugly
