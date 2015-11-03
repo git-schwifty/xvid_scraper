@@ -16,7 +16,7 @@ class MyQueue:
     def put(self, value, priority):
         if self.full():
             lowest_priority = self._p.get()
-            del self._q.queue[lowest_priority]
+            del self._q.queue[self.q.queue.index(lowest_priority)]
             heapify(self._q.queue)
         self._q.put(value["url"],  priority)
         self._p.put(value["url"], -priority)
