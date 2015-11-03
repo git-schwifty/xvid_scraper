@@ -106,7 +106,12 @@ class Mediator:
         webbrowser.open(self.cur_vid_data["url"])
 
     def train(self):
-        self.ai.train( *self.db.vectorize_tags() )
+        # We need to determine how many features to train on, but
+        # we'll just pass in a formula that takes in as an argument
+        # the number of unique tags in the database.
+        n_feats = lambda n: n // 2
+        all_vectors, usr_ratings, tag_to_vec = self.db.vectorize_tags(n_feats)
+        self.ai.train(all_vectors, usr_ratings, tag_to_vec)
 
     def close(self):
         """When a window closes, disconnect from a database."""

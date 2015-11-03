@@ -1,5 +1,6 @@
 import sqlite3 as sql
 import re
+import sys
 import numpy as np
 from copy import copy
 
@@ -59,12 +60,20 @@ class Database:
                        """.format(url))
         return any(self.c.fetchall())
 
-    def vectorize_tags(self, take_top=25):
+    def vectorize_tags(self, feats_fn):
         """ Create a binary vector for each video representing
           the presence or absense of tags. """
         # TODO: make this less ugly
 
-        # First, grab the top 100 common tags from our database.
+        # Determine how many unique tags are in our database so we can
+        # figure out how many tags to train on (read: reasonably common).
+        self.c.execute("""
+          SELECT COUNT(tag) FROM (SELECT DISTINCT tag FROM tags);
+        """)
+        take_top = feats_fn(self.c.fetchall()[0][0])
+        sys.stdout.flush()
+
+        # Grab the top _ most common tags from our database.
         self.c.execute("""
           SELECT tag, COUNT(tag) AS cnt FROM tags
           GROUP by tag
