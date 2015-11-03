@@ -50,10 +50,11 @@ class Window:
         self.next_btn = tk.Button(self.btm_frm, text="Skip",   anchor=tk.S, command=self.med.next_)
         self.exit_btn = tk.Button(self.btm_frm, text="Exit",   anchor=tk.S, command=self.close)
         self.open_btn = tk.Button(self.btm_frm, text="Open",   anchor=tk.S, command=self.med.open_vid)
+        self.train_btn = tk.Button(self.btm_frm, text="Train",  anchor=tk.S, command=self.med.train)
         for btn in [self.hate_btn, self.neut_btn,
                     self.love_btn, self.fave_btn,
                     self.exit_btn, self.open_btn,
-                    self.next_btn]:
+                    self.next_btn, self.train_btn]:
             btn.pack(side=tk.LEFT)
 
         self.btm_frm.pack()
@@ -72,12 +73,7 @@ class Window:
         pass
 
     def close(self):
-        # Since there's a connection to a database,
-        # we want to make sure that it gets closed.
-        self.med.close_db()
-        self.root.destroy()
+        self.med.close()
 
     def __del__(self):
-        # Since there's a connection to a database,
-        # we want to make sure that it gets closed.
-        self.med.close_db()
+        self.med.close()

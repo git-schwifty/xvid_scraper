@@ -106,11 +106,13 @@ class Mediator:
         webbrowser.open(self.cur_vid_data["url"])
 
     def train(self):
-        self.ai.train( self.db.vectorize_tags() )
+        self.ai.train( *self.db.vectorize_tags() )
 
-    def close_db(self):
+    def close(self):
         """When a window closes, disconnect from a database."""
+        self.train()
         self.db.cnx.close()
+        self.win.root.destroy()
 
 if __name__ == "__main__":
     # Mediator gets called from inside window because
