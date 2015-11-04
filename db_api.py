@@ -102,7 +102,8 @@ class Database:
               SELECT tag FROM tags
               WHERE url = '{0}';
             """.format(url))
-            this_vids_tags = [t[0] for t in self.c.fetchall()]
+            fetched = self.c.fetchall()
+            this_vids_tags = [t[0] for t in fetched]
 
             # Now turn those tags into a vector of numbers.
             # Start by making an empty vector to fit all our tags plus

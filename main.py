@@ -26,8 +26,8 @@ class Mediator:
 
         # Settings will go here.
         index_url  = "http://www.xvideos.com/c/{0}/anal-12"
-        look_ahead = 1
-        qmaxsize   = 1
+        look_ahead = 2
+        qmaxsize   = 2
 
         # State used by various objects.
         self.cur_vid_data = {}
@@ -66,6 +66,8 @@ class Mediator:
 
                     # Predict how much the user will like this video.
                     prediction = self.ai.predict(scraped_data)
+                    print(prediction)
+                    sys.stdout.flush()
 
                     # Save some extra data.
                     scraped_data["pic_url"] = self.scr.cur_pic
