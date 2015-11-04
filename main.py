@@ -7,26 +7,22 @@ pornographic videos through the website xvideos.com.
 from db_api    import Database
 from scraper   import Scraper
 from brain     import Brain
-#from profile   import ProfileManager
 from proj_ADTs import MyQueue
-from threading import Thread, RLock
+from threading import Thread, Lock
+#from profile   import ProfileManager
 
 import webbrowser
 import time
-import pdb
 import sys
 
 
-# WARNING: as of right now, threading doesn't seem to play nice with
-# tkinter, so any fancy threading stuff I did here is really just a
-# placeholder for later when I ditch tkinter entirely.
 class Mediator:
     def __init__(self, win):
         self.win  = win
 
         # Settings will go here.
         index_url  = "http://www.xvideos.com/c/{0}/anal-12"
-        look_ahead = 80
+        look_ahead = 50
         qmaxsize   = 25
 
         # State used by various objects.
@@ -37,7 +33,7 @@ class Mediator:
         self.db   = Database()
         self.ai   = Brain(self)
         self.q    = MyQueue(maxsize=qmaxsize)
-        self.lock = RLock()
+        self.lock = Lock()
 
         # Scraping websites will be done as a background process.
         self.gather_process = Thread(target = self.gather,
@@ -48,14 +44,24 @@ class Mediator:
         """Background process that quietly fills up the video queue with urls."""
         while True:
             if self.q.not_full():
+                # If look_ahead = 1, the result would be the there wouldn't
+                # be any videos filtered out, you'd just sort of view the
+                # first couple out of order, then for every one video you
+                # viewed, you'd just see the next video listed on the index.
+                # What we want instead is to throw out x videos for every
+                # 1 we decide is good enough to show the user. This requires
+                # we queue up more videos than the user ever evaluates.
+                #
                 # We'll implement this as a while loop so we can
                 # ignore already seen videos.
                 looked_at = 0
                 while looked_at < look_ahead:
-                    # Tell the scraper to set up the next
-                    # video for further processing.
+                    # Tell the scraper to set up the next video for
+                    # further processing (sets its internal state to
+                    # have a a video URL as scr.cur_vid as it's corr-
+                    # esponding preview image URL to scr.cur_pic).
                     self.scr.next()
-                    cur_vid = self.scr.cur_vid
+                    cur_vid = self.scr.cur_vid  # vars with too many dots are uggo
 
                     if not self.db.has_video(cur_vid):
                         # Scrape the video page for data.
@@ -69,13 +75,14 @@ class Mediator:
                         scraped_data["pred"]    = prediction
                         
                         # Put data into queue.
-                        # Note that we put a negative sign in front of the predicton
-                        # because a high rating corresponds to a large number, but for
-                        # queues, a low number is considered a high priority.
-                        self.lock.acquire()
-                        self.q.put(scraped_data, -prediction)
-                        self.lock.release()
+                        # High prediction is high priority, but queue
+                        # treats low numbers as high priority, so we
+                        # just put it in as a negative number.
+                        with self.lock:
+                            self.q.put(scraped_data, -prediction)
                         looked_at += 1
+                assert looked_at >= look_ahead
+
             else:
                 time.sleep(5)
 
@@ -97,7 +104,6 @@ class Mediator:
         # Display a little data about the video.
         for data_point in ['title', 'duration', 'pred']:
             print("\t" + data_point, self.cur_vid_data[data_point])
-
 
     def save(self, rating):
         # I should change the name loved since the program evolved to
