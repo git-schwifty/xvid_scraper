@@ -3,6 +3,8 @@ from PIL import Image
 from PIL.ImageTk import PhotoImage
 from main import Mediator
 
+import time
+
 
 class Window:
     """The GUI that the user interacts with."""
@@ -15,45 +17,46 @@ class Window:
         self.med = Mediator(self)
 
         # The top half of the window has pictures, the bottom buttons.
-        self.top_frm = tk.Frame()
-        self.btm_frm = tk.Frame()
+        self.left_frm  = tk.Frame()
+        self.right_frm = tk.Frame(width=100)
 
         # Load the top three images.
         pic1 = PhotoImage(Image.open("03.jpg"))
         pic2 = PhotoImage(Image.open("13.jpg"))
         pic3 = PhotoImage(Image.open("23.jpg"))
-        self.pic1_lbl = tk.Label(self.top_frm, image=pic1)
-        self.pic2_lbl = tk.Label(self.top_frm, image=pic2)
-        self.pic3_lbl = tk.Label(self.top_frm, image=pic2)
+
+        self.pic1_lbl = tk.Label(self.left_frm, image=pic1)
+        self.pic2_lbl = tk.Label(self.left_frm, image=pic2)
+        self.pic3_lbl = tk.Label(self.left_frm, image=pic3)
+
         self.pic1_lbl.image = pic1  # Keep a copy around to avoid
         self.pic2_lbl.image = pic2  # these from getting garbage-
         self.pic3_lbl.image = pic3  # collected.
-        self.pic1_lbl.pack(side=tk.LEFT)
-        self.pic2_lbl.pack(side=tk.LEFT)
-        self.pic3_lbl.pack(side=tk.LEFT)
 
-        self.top_frm.pack()
+        self.pic1_lbl.grid(row=0, column=0)
+        self.pic2_lbl.grid(row=0, column=1)
+        self.pic3_lbl.grid(row=0, column=2)
+        
+        # We'll use a sliding scale for ratings.
+        self.scale = tk.Scale(self.left_frm, from_=0, to=99, orient=tk.HORIZONTAL)
+        self.scale.grid(row=1, column=0, columnspan=2, sticky=tk.W + tk.E)
 
-        # Create a bunch of buttons at the bottom of the screen.
-        hate = lambda: self.med.save(0)
-        neut = lambda: self.med.save(1)
-        love = lambda: self.med.save(2)
-        fave = lambda: self.med.save(3)
-        self.hate_btn = tk.Button(self.btm_frm, text="Hate",   anchor=tk.S, command=hate)
-        self.neut_btn = tk.Button(self.btm_frm, text="Meh.",   anchor=tk.S, command=neut)
-        self.love_btn = tk.Button(self.btm_frm, text="Love",   anchor=tk.S, command=love)
-        self.fave_btn = tk.Button(self.btm_frm, text="WOWZA!", anchor=tk.S, command=fave)
-        self.next_btn = tk.Button(self.btm_frm, text="Skip",   anchor=tk.S, command=self.med.next_)
-        self.exit_btn = tk.Button(self.btm_frm, text="Exit",   anchor=tk.S, command=self.med.close)
-        self.open_btn = tk.Button(self.btm_frm, text="Open",   anchor=tk.S, command=self.med.open_vid)
-        self.train_btn = tk.Button(self.btm_frm, text="Train",  anchor=tk.S, command=self.med.train)
-        for btn in [self.hate_btn, self.neut_btn,
-                    self.love_btn, self.fave_btn,
-                    self.exit_btn, self.open_btn,
-                    self.next_btn, self.train_btn]:
-            btn.pack(side=tk.LEFT)
+        rate = lambda: self.med.save(self.scale.get())
+        self.rate_btn = tk.Button(self.left_frm, text="Rate", anchor=tk.E, command=rate)
+        self.rate_btn.grid(row=1, column=2)
+        self.left_frm.pack(side=tk.LEFT)
 
-        self.btm_frm.pack()
+        # Now for our buttons down the righ-hand side.
+        self.next_btn  = tk.Button(self.right_frm, text="Skip",  anchor=tk.S, command=self.med.next_)
+        self.exit_btn  = tk.Button(self.right_frm, text="Exit",  anchor=tk.S, command=self.med.close)
+        self.open_btn  = tk.Button(self.right_frm, text="Open",  anchor=tk.S, command=self.med.open_vid)
+        self.train_btn = tk.Button(self.right_frm, text="Train", anchor=tk.S, command=self.med.train)
+        self.next_btn.grid(row=0)
+        self.exit_btn.grid(row=1)
+        self.open_btn.grid(row=2)
+        self.train_btn.grid(row=3)
+
+        self.right_frm.pack(side=tk.RIGHT)
 
         # Grab the next video immediately after creating the window.
         self.med.next_()

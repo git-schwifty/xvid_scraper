@@ -22,8 +22,8 @@ class Mediator:
 
         # Settings will go here.
         index_url  = "http://www.xvideos.com/c/{0}/anal-12"
-        look_ahead = 50
-        qmaxsize   = 25
+        look_ahead = 1
+        qmaxsize   = 1
 
         # State used by various objects.
         self.cur_vid_data = {}
@@ -103,7 +103,7 @@ class Mediator:
 
         # Display a little data about the video.
         print()
-        for data_point in ['title', 'length', 'pred']:
+        for data_point in ['title', 'duration', 'pred']:
             print("\t" + data_point + "\t", str(self.cur_vid_data[data_point]).ljust(10))
 
     def save(self, rating):
