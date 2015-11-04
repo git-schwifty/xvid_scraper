@@ -15,7 +15,7 @@ class Brain:
 
         if ("brain.pkl" in os.listdir()) and ("brain_vec.pkl" in os.listdir()):
             with open("brain.pkl", "rb") as f:
-                self.models = pickle.load(f)
+                self.model = pickle.load(f)
             f.close()
 
             with open("brain_vec.pkl", "rb") as f:
@@ -56,6 +56,7 @@ class Brain:
         f.close()
 
     def predict(self, data):
+        sys.stdout.flush()
         if self.model:
             # First we need to turn our data into a vector.
             this_vec = np.zeros(len(self.tag_to_vec.keys()))
@@ -70,7 +71,7 @@ class Brain:
             this_vec[self.tag_to_vec["views"]]    = data["views"]
 
             # now predict what the user will rate this as.
-            return self.model.predict(this_vec)
+            return self.model.predict(this_vec)[0]
 
         else:
             raise RuntimeError("This isn't supposed to happen.")

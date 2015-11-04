@@ -24,8 +24,8 @@ class Window:
 
         # Load the top three images.
         pic1 = PhotoImage(Image.open("03.jpg"))
-        pic2 = PhotoImage(Image.open("13.jpg"))
-        pic3 = PhotoImage(Image.open("23.jpg"))
+        pic2 = PhotoImage(Image.open("23.jpg"))
+        pic3 = PhotoImage(Image.open("13.jpg"))
         self.pic1_lbl = tk.Label(self.top_frm, image=pic1)
         self.pic2_lbl = tk.Label(self.top_frm, image=pic2)
         self.pic3_lbl = tk.Label(self.top_frm, image=pic2)
