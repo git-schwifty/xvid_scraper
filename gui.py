@@ -38,8 +38,9 @@ class Window:
         self.pic3_lbl.grid(row=0, column=2)
         
         # We'll use a sliding scale for ratings.
-        self.scale = tk.Scale(self.left_frm, from_=0, to=99, orient=tk.HORIZONTAL)
+        self.scale = tk.Scale(self.left_frm, from_=0, to=99, orient=tk.HORIZONTAL, repeatdelay=1, repeatinterval=1)
         self.scale.grid(row=1, column=0, columnspan=2, sticky=tk.W + tk.E)
+        self.scale.set(50)
 
         rate = lambda: self.med.save(self.scale.get())
         self.rate_btn = tk.Button(self.left_frm, text="Rate", anchor=tk.E, command=rate)
@@ -57,6 +58,15 @@ class Window:
         self.train_btn.grid(row=3)
 
         self.right_frm.pack(side=tk.RIGHT)
+
+        # Some keybindings.
+        # Numbers are ratings where 1 rates it at 10, 2 at 20, 3 at 30, etc.
+        for i in range(10):
+            self.root.bind(str(i), lambda event: self.med.save(i*10))
+        self.root.bind("<space>",  lambda event: self.med.next_())
+        self.root.bind("<Return>", lambda event: rate())
+        self.root.bind("t",        lambda event: self.med.train())
+        self.root.bind("o",        lambda event: self.med.open_vid())
 
         # Grab the next video immediately after creating the window.
         self.med.next_()
