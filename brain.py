@@ -74,4 +74,4 @@ class Brain:
             return self.model.predict(this_vec)[0]
 
         else:
-            raise RuntimeError("This isn't supposed to happen.")
+            return 0
