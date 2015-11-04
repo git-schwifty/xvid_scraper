@@ -30,7 +30,7 @@ class Mediator:
 
         # Load up all the major elements of the program.
         self.scr  = Scraper(index_url=index_url, pg_n=0)
-        self.db   = Database()
+        self.db   = Database(self)  # db will skip to next video if saving fails
         self.ai   = Brain(self)
         self.q    = MyQueue(maxsize=qmaxsize)
         self.lock = Lock()
@@ -102,8 +102,9 @@ class Mediator:
         self.win.update_images( *self.scr.load_pics(pic_url) )
 
         # Display a little data about the video.
-        for data_point in ['title', 'duration', 'pred']:
-            print("\t" + data_point, self.cur_vid_data[data_point])
+        print()
+        for data_point in ['title', 'length', 'pred']:
+            print("\t" + data_point + "\t", str(self.cur_vid_data[data_point]).ljust(10))
 
     def save(self, rating):
         # I should change the name loved since the program evolved to
@@ -125,7 +126,10 @@ class Mediator:
 
     def close(self):
         """When a window closes, disconnect from a database."""
-        self.train()
+        try:
+            self.train()
+        except:
+            pass
         self.db.cnx.close()
         self.win.root.destroy()
 

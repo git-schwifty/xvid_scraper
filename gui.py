@@ -6,10 +6,6 @@ from main import Mediator
 
 class Window:
     """The GUI that the user interacts with."""
-    # There's really not a lot I can think to fix having to
-    # do most things three times in a short, readable and
-    # elegant way.
-
     def __init__(self):
         self.root = tk.Tk()
 
@@ -48,7 +44,7 @@ class Window:
         self.love_btn = tk.Button(self.btm_frm, text="Love",   anchor=tk.S, command=love)
         self.fave_btn = tk.Button(self.btm_frm, text="WOWZA!", anchor=tk.S, command=fave)
         self.next_btn = tk.Button(self.btm_frm, text="Skip",   anchor=tk.S, command=self.med.next_)
-        self.exit_btn = tk.Button(self.btm_frm, text="Exit",   anchor=tk.S, command=self.close)
+        self.exit_btn = tk.Button(self.btm_frm, text="Exit",   anchor=tk.S, command=self.med.close)
         self.open_btn = tk.Button(self.btm_frm, text="Open",   anchor=tk.S, command=self.med.open_vid)
         self.train_btn = tk.Button(self.btm_frm, text="Train",  anchor=tk.S, command=self.med.train)
         for btn in [self.hate_btn, self.neut_btn,
@@ -58,8 +54,9 @@ class Window:
             btn.pack(side=tk.LEFT)
 
         self.btm_frm.pack()
-        self.med.next_()
 
+        # Grab the next video immediately after creating the window.
+        self.med.next_()
 
     def update_images(self, pic1, pic2, pic3):
         self.pic1_lbl.configure(image=pic1)
@@ -68,12 +65,6 @@ class Window:
         self.pic1_lbl.image = pic1
         self.pic2_lbl.image = pic2
         self.pic3_lbl.image = pic3
-
-    def open_vid(self):
-        pass
-
-    def close(self):
-        self.med.close()
 
     def __del__(self):
         self.med.close()
