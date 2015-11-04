@@ -68,9 +68,16 @@ class Window:
         self.right_frm.pack(side=tk.RIGHT)
 
         # Some keybindings.
-        # Numbers are ratings where 1 rates it at 10, 2 at 20, 3 at 30, etc.
-        for i in range(10):
-            self.root.bind(str(i), lambda event: self.med.save(i*10))
+        self.root.bind("a", lambda event: self.med.save(0))
+        self.root.bind("s", lambda event: self.med.save(1))
+        self.root.bind("d", lambda event: self.med.save(2))
+        self.root.bind("f", lambda event: self.med.save(3))
+        self.root.bind("g", lambda event: self.med.save(4))
+        self.root.bind("h", lambda event: self.med.save(5))
+        self.root.bind("j", lambda event: self.med.save(6))
+        self.root.bind("k", lambda event: self.med.save(7))
+        self.root.bind("l", lambda event: self.med.save(8))
+        self.root.bind(";", lambda event: self.med.save(9))
         self.root.bind("<space>",  lambda event: self.med.next_())
         self.root.bind("<Return>", lambda event: rate())
         self.root.bind("t",        lambda event: self.med.train())
@@ -87,8 +94,6 @@ class Window:
         self.pic2_lbl.image = pic2
         self.pic3_lbl.image = pic3
 
-    def feedback(self, text):
-        self.feedback_box.config(text=text)
 
     def __del__(self):
         self.med.close()

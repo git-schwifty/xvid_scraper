@@ -1,4 +1,4 @@
-from sklearn.svm import SVR as SupportVectorMachine
+from sklearn.tree import DecisionTreeRegressor as Model
 from math import log
 
 import numpy as np
@@ -44,7 +44,7 @@ class Brain:
 
         self.tag_to_vec = tag_to_vec
 
-        self.model = SupportVectorMachine()
+        self.model = Model()
         self.model.fit(X=data_vectors, y=classifications)
 
         # Finally, save our models

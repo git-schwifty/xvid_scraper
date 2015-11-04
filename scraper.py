@@ -120,8 +120,8 @@ class Scraper:
 
             except requests.exceptions.ConnectionError:
                 if count < 2:
-                    print("Connection error, waiting...")
+                    self.med.feedback("Connection error, waiting...")
                     time.sleep(3)
-                    print("Trying again.")
+                    self.med.feedback("Trying again.")
                 else:
-                    print("Connection error. Pics not loaded.")
+                    self.med.feedback("Connection error. Pics not loaded.")

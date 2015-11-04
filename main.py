@@ -108,7 +108,7 @@ class Mediator:
         txt += "title:\t"  + str(self.cur_vid_data['title']   ).ljust(20)[:20]   + "\n"
         txt += "\t"        + str(self.cur_vid_data['title']   ).ljust(40)[20:40] + "\n"
         txt += "length:\t" + str(self.cur_vid_data['duration']).ljust(20)[:20]   + "\n"
-        txt += "guess:\t"  + str(round(self.cur_vid_data['pred'], 2))
+        txt += "guess:\t"  + str(round(self.cur_vid_data['pred']))
         self.feedback(txt)
 
     def save(self, rating):
@@ -133,6 +133,7 @@ class Mediator:
     def feedback(self, text):
         """Tell the user what's going on in a textbox inside the window (not popup)."""
         self.win.feedback_box.config(text=text)
+        sys.stdout.flush()
 
     def close(self):
         """When a window closes, disconnect from a database."""
