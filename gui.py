@@ -18,8 +18,10 @@ class Window:
 
         # The top half of the window has pictures, the bottom buttons.
         self.left_frm  = tk.Frame()
-        self.right_frm = tk.Frame(width=100)
+        self.mdle_frm  = tk.Frame()
+        self.right_frm = tk.Frame()
 
+        # LEFT FRAME
         # Load the top three images.
         pic1 = PhotoImage(Image.open("03.jpg"))
         pic2 = PhotoImage(Image.open("13.jpg"))
@@ -47,6 +49,12 @@ class Window:
         self.rate_btn.grid(row=1, column=2)
         self.left_frm.pack(side=tk.LEFT)
 
+        # MIDDLE FRAME
+        self.feedback_box = tk.Message(self.mdle_frm, text="creating window...", width=250)
+        self.feedback_box.pack()
+        self.mdle_frm.pack(side=tk.LEFT)
+
+        # RIGHT FRAME
         # Now for our buttons down the righ-hand side.
         self.next_btn  = tk.Button(self.right_frm, text="Skip",  anchor=tk.S, command=self.med.next_)
         self.exit_btn  = tk.Button(self.right_frm, text="Exit",  anchor=tk.S, command=self.med.close)
@@ -78,6 +86,9 @@ class Window:
         self.pic1_lbl.image = pic1
         self.pic2_lbl.image = pic2
         self.pic3_lbl.image = pic3
+
+    def feedback(self, text):
+        self.feedback_box.config(text=text)
 
     def __del__(self):
         self.med.close()

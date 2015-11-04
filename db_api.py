@@ -63,6 +63,8 @@ class Database:
 
         except sqlite.IntegrityError:
             # UNIQUE constraint failed: videos.url
+            self.med.feedback("Program attempted to add a video to \
+                               the database that was already in there.")
             self.med.next_()
 
     def has_video(self, url):

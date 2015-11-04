@@ -90,8 +90,10 @@ class Mediator:
         """Load up the next video in the queue."""
         # Wait until we have save data before going on to the next one.
         while self.q.empty():
+            self.feedback("Video queue is empty; waiting...")
             time.sleep(1)
 
+        self.feedback("loading next video...")
         # Get our data out of the queue.
         self.lock.acquire()
         self.cur_vid_data = self.q.get()
@@ -102,9 +104,12 @@ class Mediator:
         self.win.update_images( *self.scr.load_pics(pic_url) )
 
         # Display a little data about the video.
-        print()
-        for data_point in ['title', 'duration', 'pred']:
-            print("\t" + data_point + "\t", str(self.cur_vid_data[data_point]).ljust(10))
+        txt = ""
+        txt += "title:\t"  + str(self.cur_vid_data['title']   ).ljust(20)[:20]   + "\n"
+        txt += "\t"        + str(self.cur_vid_data['title']   ).ljust(40)[20:40] + "\n"
+        txt += "length:\t" + str(self.cur_vid_data['duration']).ljust(20)[:20]   + "\n"
+        txt += "guess:\t"  + str(round(self.cur_vid_data['pred'], 2))
+        self.feedback(txt)
 
     def save(self, rating):
         # I should change the name loved since the program evolved to
@@ -120,18 +125,25 @@ class Mediator:
         # We need to determine how many features to train on, but
         # we'll just pass in a formula that takes in as an argument
         # the number of unique tags in the database.
+        self.feedback("training...")
         n_feats = lambda n: n // 2
         all_vectors, usr_ratings, tag_to_vec = self.db.vectorize_tags(n_feats)
         self.ai.train(all_vectors, usr_ratings, tag_to_vec)
 
+    def feedback(self, text):
+        """Tell the user what's going on in a textbox inside the window (not popup)."""
+        self.win.feedback_box.config(text=text)
+
     def close(self):
         """When a window closes, disconnect from a database."""
+        self.feedback("closing...")
         try:
             self.train()
         except:
             pass
         self.db.cnx.close()
         self.win.root.destroy()
+
 
 if __name__ == "__main__":
     # Mediator gets called from inside window because

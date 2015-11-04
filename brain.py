@@ -37,7 +37,9 @@ class Brain:
 
         # Make sure we were asked to train on data in
         # a situation in which that data exists.
+        self.med.feedback("training")
         if not any(tag_to_vec.keys()):
+            self.med.feedback("no data to train on")
             return None
 
         self.tag_to_vec = tag_to_vec
@@ -55,8 +57,9 @@ class Brain:
             pickle.dump(tag_to_vec, f)
         f.close()
 
+        self.med.feedback("training complete")
+
     def predict(self, data):
-        sys.stdout.flush()
         if self.model:
             # First we need to turn our data into a vector.
             this_vec = np.zeros(len(self.tag_to_vec.keys()))
