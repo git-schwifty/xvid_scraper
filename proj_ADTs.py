@@ -46,5 +46,4 @@ class MyQueue:
         return self._q.qsize() < self.maxsize
 
     def qsize(self):
-        return len(self._q)
-
+        return len(self._q.queue)
