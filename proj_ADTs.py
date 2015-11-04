@@ -43,7 +43,7 @@ class MyQueue:
         return self._q.qsize() >= self.maxsize
 
     def not_full(self):
-        return not self.full()
+        return self._q.qsize() < self.maxsize
 
     def qsize(self):
         return len(self._q)

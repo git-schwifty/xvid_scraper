@@ -26,8 +26,8 @@ class Mediator:
 
         # Settings will go here.
         index_url  = "http://www.xvideos.com/c/{0}/anal-12"
-        look_ahead = 40
-        qmaxsize   = 20
+        look_ahead = 1
+        qmaxsize   = 1
 
         # State used by various objects.
         self.cur_vid_data = {}
@@ -48,7 +48,10 @@ class Mediator:
         """Background process that quietly fills up the video queue with urls."""
         while True:
             if self.q.not_full():
-                for i in range(look_ahead):
+                # We'll implement this as a while loop so we can
+                # ignore already seen videos.
+                looked_at = 0
+                while looked_at < look_ahead:
                     # Tell the scraper to set up the next
                     # video for further processing.
                     self.scr.next()
@@ -75,8 +78,9 @@ class Mediator:
                     self.lock.acquire()
                     self.q.put(scraped_data, -prediction)
                     self.lock.release()
+                    looked_at += 1
             else:
-                time.sleep(1)
+                time.sleep(5)
 
     def next_(self):
         """Load up the next video in the queue."""
