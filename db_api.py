@@ -61,7 +61,7 @@ class Database:
                                    """.format(data["url"], tag))
                     self.cnx.commit()
 
-        except sqlite.IntegrityError:
+        except sql.IntegrityError:
             # UNIQUE constraint failed: videos.url
             self.med.feedback("Program attempted to add a video to \
                                the database that was already in there.")
