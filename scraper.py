@@ -1,4 +1,5 @@
 import re
+import sys
 import time
 import requests
 from copy import copy
@@ -11,7 +12,8 @@ from PIL.ImageTk import PhotoImage
 
 class Scraper:
     """Scrape data and links from xvideos.com."""
-    def __init__(self, index_url="http://www.xvideos.com/c/{0}/Anal-12", pg_n=0):
+    def __init__(self, med, index_url="", pg_n=0):
+        self.med = med
         self.index_url = index_url
         self.pg_n = pg_n
         self.vids = []

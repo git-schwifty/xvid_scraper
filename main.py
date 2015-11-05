@@ -21,24 +21,33 @@ class Mediator:
         self.win  = win
 
         # Settings will go here.
-        index_url  = "http://www.xvideos.com/c/{0}/anal-12"
-        look_ahead = 1
-        qmaxsize   = 1
+        index_url = "http://www.xvideos.com/best/month/{0}/"
+        look_ahead = 2
+        self.qmaxsize = 1
 
         # State used by various objects.
         self.cur_vid_data = {}
+        self.nxt_call_cnt = 0
 
         # Load up all the major elements of the program.
-        self.scr  = Scraper(index_url=index_url, pg_n=0)
-        self.db   = Database(self)  # db will skip to next video if saving fails
+        self.scr  = Scraper(self, index_url=index_url)
+        self.db   = Database(self)
         self.ai   = Brain(self)
-        self.q    = MyQueue(maxsize=qmaxsize)
+        self.q    = MyQueue(maxsize=self.qmaxsize)
         self.lock = Lock()
 
         # Scraping websites will be done as a background process.
         self.gather_process = Thread(target = self.gather,
                                      daemon = True)
         self.gather_process.start()
+
+    def _train_each(fn):
+        def inner(self):
+            self.nxt_call_cnt += 1
+            if self.nxt_call_cnt % 10 == 0:
+                self.train()
+            return fn(self)
+        return inner
 
     def gather(self, look_ahead=4):
         """Background process that quietly fills up the video queue with urls."""
@@ -86,6 +95,7 @@ class Mediator:
             else:
                 time.sleep(5)
 
+    @_train_each
     def next_(self):
         """Load up the next video in the queue."""
         # Wait until we have save data before going on to the next one.
@@ -134,6 +144,38 @@ class Mediator:
         """Tell the user what's going on in a textbox inside the window (not popup)."""
         self.win.feedback_box.config(text=text)
         sys.stdout.flush()
+
+    def set_fetish(self, key):
+        fetishes = {
+            "amateur"     : "http://www.xvideos.com/c/{0}/real_amateur-17",
+            "anal"        : "http://www.xvideos.com/c/{0}/Anal-12",
+            "asian"       : "http://www.xvideos.com/c/{0}/Asian_Woman-32",
+            "ebony"       : "http://www.xvideos.com/c/{0}/Black_Woman-30",
+            "blowjob"     : "http://www.xvideos.com/c/{0}/Blowjob-15",
+            "cumshot"     : "http://www.xvideos.com/c/{0}/Cumshot-18",
+            "gay"         : "http://www.xvideos.com/c/{0}/Gay-45",
+            "hardcore"    : "http://www.xvideos.com/c/{0}/Hardcore-35",
+            "tits"        : "http://www.xvideos.com/c/{0}/Huge_Tits-46",
+            "interracial" : "http://www.xvideos.com/c/{0}/Interracial-27",
+            "latina"      : "http://www.xvideos.com/c/{0}/Latina-16",
+            "lesbian"     : "http://www.xvideos.com/c/{0}/Lesbian-26",
+            "milf"        : "http://www.xvideos.com/c/{0}/Milf-19",
+            "shemale"     : "http://www.xvideos.com/c/{0}/Shemale-36",
+            "teen"        : "http://www.xvideos.com/c/{0}/Teen-13",
+            "new"         : "http://www.xvideos.com/new/{0}/",
+            "best"        : "http://www.xvideos.com/best/{0}/"
+        }
+        del self.gather_process
+        self.scr.index_url = fetishes[key]
+        self.scr.pg_n = 0
+        if key == "new":
+            self.scr.pg_n += 1
+        self.gather_process = Thread(target = self.gather,
+                                     daemon = True)
+        self.gather_process.start()
+
+    def clear_queue(self):
+        self.q = MyQueue(maxsize=self.qmaxsize)
 
     def close(self):
         """When a window closes, disconnect from a database."""

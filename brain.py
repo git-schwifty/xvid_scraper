@@ -1,4 +1,5 @@
-from sklearn.tree import DecisionTreeRegressor as Model
+##from sklearn.tree import DecisionTreeRegressor as Model
+from sklearn.ensemble import AdaBoostClassifier as Model
 from math import log
 
 import numpy as np
@@ -23,18 +24,6 @@ class Brain:
             f.close()
 
     def train(self, data_vectors, classifications, tag_to_vec):
-        # After testing out a couple of different plausible models,
-        # SVM came out on top with Decision Trees coming out second.
-        # Models that assume independence of variable didn't do too
-        # well. The following data is typical of the sorts of results
-        # I'd get:
-        #
-        # Predictive Model        Mean Squared Error
-        # Decision Tree           0.65
-        # Support Vector Machine  5.7
-        # Logistic Regression     0.8
-        # Naive Bayes             1.4
-
         # Make sure we were asked to train on data in
         # a situation in which that data exists.
         self.med.feedback("training")
@@ -44,8 +33,12 @@ class Brain:
 
         self.tag_to_vec = tag_to_vec
 
-        self.model = Model()
-        self.model.fit(X=data_vectors, y=classifications)
+        # Other processes may use this while we're fitting and
+        # I don't feel like setting up a lock for this right now,
+        # so we only replace the current model once that's done.
+        model = Model()
+        model.fit(X=data_vectors, y=classifications)
+        self.mode = model
 
         # Finally, save our models
         with open("brain.pkl", "wb") as f:
