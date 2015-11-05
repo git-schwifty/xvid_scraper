@@ -30,7 +30,7 @@ class Window:
                        "blowjob",      "gay",   "hardcore", "tits",
                        "interracial", "latina", "lesbian",  "milf",
                        "shemale",      "teen",  "new",      "best"]:
-            self.fetishes_menu.add_radiobutton(label=fetish, command=lambda: self.med.set_fetish(fetish))
+            self.fetishes_menu.add_radiobutton(label=str(fetish), command=lambda: self.med.set_fetish(fetish))
         self.root_menu.add_cascade(label="Fetishes", menu=self.fetishes_menu)
 
         self.root.config(menu=self.root_menu)

@@ -22,8 +22,9 @@ class Mediator:
 
         # Settings will go here.
         index_url = "http://www.xvideos.com/best/month/{0}/"
-        look_ahead = 2
-        self.qmaxsize = 1
+
+        look_ahead = 40
+        self.qmaxsize = 100
 
         # State used by various objects.
         self.cur_vid_data = {}
@@ -170,6 +171,7 @@ class Mediator:
         self.scr.pg_n = 0
         if key == "new":
             self.scr.pg_n += 1
+
         self.gather_process = Thread(target = self.gather,
                                      daemon = True)
         self.gather_process.start()
