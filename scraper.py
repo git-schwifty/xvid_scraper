@@ -101,24 +101,21 @@ class Scraper:
         """Determine the next video to be show and return three preview images."""
         pic_url = re.search(".+\.(?=([0-9]+.jpg))", pic_url).group()
         pic_url = pic_url + "{0}.jpg"  # make url able to take .format() method
-        url1 = pic_url.format(10)
-        url2 = pic_url.format(20)
-        url3 = pic_url.format(30)
+        # preview images range from 1 to 30.
+        urls = []
+        for i in range(1, 30, 31 // self.med.pics_to_display):
+            urls.append(pic_url.format(i))
         count = 0
-        while count < 2:
+        while count < 2:  # Give it an extra shot if there's a connection time-out.
             count += 1
             try:
-                r1 = requests.get(url1)
-                r2 = requests.get(url2)
-                r3 = requests.get(url3)
+                pics = []
+                for url in urls:
+                    r = requests.get(url)
+                    pics.append( PhotoImage(Image.open(BytesIO(r.content))) )
+                    r.close()
 
-                r1.close(); r2.close(); r3.close();
-
-                pic1 = PhotoImage(Image.open(BytesIO(r1.content)))
-                pic2 = PhotoImage(Image.open(BytesIO(r2.content)))
-                pic3 = PhotoImage(Image.open(BytesIO(r3.content)))
-
-                return pic1, pic2, pic3
+                return tuple(pics)
 
             except requests.exceptions.ConnectionError:
                 if count < 2:

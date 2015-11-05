@@ -15,6 +15,8 @@ class Window:
         self.med = Mediator(self)
 
         self.root = tk.Tk()
+
+        pics_to_display = 6
         
         # Add a menubar.
         self.root_menu = tk.Menu(self.root)
@@ -40,19 +42,13 @@ class Window:
         self.right_frm = tk.Frame()
 
         # LEFT FRAME
-        # Load the top three images.
-        pic1 = PhotoImage(Image.open("03.jpg"))
-        pic2 = PhotoImage(Image.open("13.jpg"))
-        pic3 = PhotoImage(Image.open("23.jpg"))
-        self.pic1_lbl = tk.Label(self.left_frm, image=pic1)
-        self.pic2_lbl = tk.Label(self.left_frm, image=pic2)
-        self.pic3_lbl = tk.Label(self.left_frm, image=pic3)
-        self.pic1_lbl.image = pic1  # Keep a copy around to avoid
-        self.pic2_lbl.image = pic2  # these from getting garbage-
-        self.pic3_lbl.image = pic3  # collected.
-        self.pic1_lbl.grid(row=0, column=0)
-        self.pic2_lbl.grid(row=0, column=1)
-        self.pic3_lbl.grid(row=0, column=2)
+        # Load the top images.
+        self.pic_lbls = []
+        for i in range(pics_to_display):
+            pic = PhotoImage(Image.open("{0}3.jpg".format(i % 3))) # we only have 3 default pics
+            self.pic_lbls.append( tk.Label(self.left_frm, image=pic) )
+            self.pic_lbls[-1].image = pic  # prevents garbage collection
+            self.pic_lbls[-1].grid(row=i // 3, column=i % 3)
         
         # We'll use a sliding scale for ratings.
         self.scale = tk.Scale(self.left_frm,
@@ -61,13 +57,13 @@ class Window:
                               repeatdelay=1,
                               repeatinterval=1)
 
-        self.scale.grid(row=1, column=0, columnspan=2, sticky=tk.W + tk.E)
+        self.scale.grid(row=2, column=0, columnspan=2, sticky=tk.W + tk.E)
         self.scale.set(50)
         
         # Add the rate button just to the left of the scale.
         rate = lambda: self.med.save(self.scale.get())
         self.rate_btn = tk.Button(self.left_frm, text="Rate", anchor=tk.E, command=rate)
-        self.rate_btn.grid(row=1, column=2)
+        self.rate_btn.grid(row=2, column=2)
         self.left_frm.pack(side=tk.LEFT)
 
         # RIGHT FRAME
@@ -101,13 +97,11 @@ class Window:
         # Grab the next video immediately after creating the window.
         self.med.next_()
 
-    def update_images(self, pic1, pic2, pic3):
-        self.pic1_lbl.configure(image=pic1)
-        self.pic2_lbl.configure(image=pic2)
-        self.pic3_lbl.configure(image=pic3)
-        self.pic1_lbl.image = pic1
-        self.pic2_lbl.image = pic2
-        self.pic3_lbl.image = pic3
+    def update_images(self, *args):
+        sys.stdout.flush()
+        for pic_lbl, new_pic in zip(self.pic_lbls, args):
+            pic_lbl.configure(image=new_pic)
+            pic_lbl.image = new_pic
 
 
     def __del__(self):

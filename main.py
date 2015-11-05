@@ -22,7 +22,7 @@ class Mediator:
 
         # Settings will go here.
         index_url = "http://www.xvideos.com/best/month/{0}/"
-
+        self.pics_to_display = 6
         look_ahead = 40
         self.qmaxsize = 100
 
@@ -188,6 +188,7 @@ class Mediator:
             pass
         self.db.cnx.close()
         self.win.root.destroy()
+        del self.gather_process
 
 
 if __name__ == "__main__":
