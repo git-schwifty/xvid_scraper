@@ -1,4 +1,5 @@
 import sqlite3 as sql
+import numpy   as np
 
 from threading import Lock
 from copy      import copy
